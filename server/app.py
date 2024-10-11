@@ -78,6 +78,7 @@ class RecipeIndex(Resource):
         recipes = Recipe.query.filter_by(user_id = session.get('user_id')).all()
         recipes_list = [recipe.to_dict() for recipe in recipes]
         return make_response(jsonify(recipes_list), 200)
+    
     def post(self):
         data = request.json
         title = data.get('title')
@@ -97,16 +98,19 @@ class RecipeIndex(Resource):
         user_id = session.get('user_id')
         if not user_id:
             return make_response(jsonify({"errors": "Unauthorized"}), 401)
-        recipe = Recipe(
-            title = title,
-            instructions = instructions,
-            minutes_to_complete = minutes_to_complete,
-            user_id = user_id
-        )
-        db.session.add(recipe)
-        db.session.commit()
+        try:
+            recipe = Recipe(
+                title = title,
+                instructions = instructions,
+                minutes_to_complete = minutes_to_complete,
+                user_id = user_id
+            )
+            db.session.add(recipe)
+            db.session.commit()
+        except Exception as e:
+            return make_response(jsonify({"error": "Failed to create recipe"}), 422)
 
-        return make_response(jsonify(recipe.to_dict())), 201
+        return make_response(jsonify(recipe.to_dict()), 201)
 
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
