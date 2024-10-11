@@ -13,7 +13,7 @@ class User(db.Model, SerializerMixin):
     image_url = db.Column(db.String)
     bio = db.Column(db.String)
     
-    serialize_rules = ('-_password_hash')
+    serialize_rules = ('-_password_hash', '-recipes.user',)
     recipes = db.relationship('Recipe', back_populates="user", cascade='all, delete-orphan')
 
     @validates('username')
@@ -52,6 +52,8 @@ class Recipe(db.Model, SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     user = db.relationship('User', back_populates="recipes")
+
+    serialize_rules = ('-user.recipes',)
 
     @validates('title')
     def validate_title(self, key, title):
