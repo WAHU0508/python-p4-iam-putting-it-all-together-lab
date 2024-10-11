@@ -12,7 +12,8 @@ class User(db.Model, SerializerMixin):
     _password_hash = db.Column(db.String)
     image_url = db.Column(db.String)
     bio = db.Column(db.String)
-
+    
+    serialize_rules = ('-_password_hash')
     recipes = db.relationship('Recipe', back_populates="user", cascade='all, delete-orphan')
 
     @validates('username')
