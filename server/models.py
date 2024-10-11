@@ -8,13 +8,15 @@ class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, unique=True)
-    _password_hash = db.Column(db.String)
+    username = db.Column(db.String, unique=True, nullable=False)
+    _password_hash = db.Column(db.String, nullable=False)
     image_url = db.Column(db.String)
     bio = db.Column(db.String)
 
+    recipes = db.relationship('Recipe', back_populates="user", cascade='all, delete-orphan')
+
     @validates('username')
-    def username(self, key, username):
+    def validate_username(self, key, username):
         if not username:
             raise ValueError("Username cannot be empty")
         existing_user = User.query.filter(User.username == username).first()
@@ -42,4 +44,25 @@ class User(db.Model, SerializerMixin):
 class Recipe(db.Model, SerializerMixin):
     __tablename__ = 'recipes'
     
-    pass
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String, nullable=False)
+    instructions = db.Column(db.String, nullable=False)
+    minutes_to_complete = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    user = db.relationship('User', back_populates="recipes")
+
+    @validates('title')
+    def validate_title(self, key, title):
+        if not title:
+            raise ValueError("Title cannot be empty")
+    @validates('instructions')
+    def validate_instructions(self, key, instructions):
+        if not instructions:
+            raise ValueError("Instructions cannot be empty")
+        if len(instructions) < 50:
+            raise ValueError("Instructions should be atleast 50")
+        return instructions
+    
+    def __repr__(self):
+        return f'Recipe {self.title}, ID: {self.id}'
